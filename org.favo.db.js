@@ -131,16 +131,15 @@ exports.connect = function (DB) {
     // copy f2 back to f
     f = E.openFile(DB, 'w');
     f2 = E.openFile(DB + '.tmp', 'r');
-    while ( (data = f2.read(BUFFER_READ)) ) {
-      f.write(data);
-    }
-    f.close();
-    f2.close();
+    f2.pipe(f, {chunkSize: BUFFER_READ, complete: function () {
+      f.close();
+      f2.close();
 
-    // remove tmp file
-    f2 = E.openFile(DB + '.tmp', 'w');
-    f2.write();
-    f2.close();
+      // remove tmp file
+      f2 = E.openFile(DB + '.tmp', 'w');
+      f2.write();
+      f2.close();
+    }});
 
     return this;
   }
