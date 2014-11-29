@@ -127,7 +127,6 @@ exports.connect = function (DB) {
     }
     f.close();
     f2.close();
-    console.log('X');
 
     // copy f2 back to f
     f = E.openFile(DB, 'w');
@@ -137,7 +136,6 @@ exports.connect = function (DB) {
     }
     f.close();
     f2.close();
-    console.log('Y');
 
     // remove tmp file
     f2 = E.openFile(DB + '.tmp', 'w');
@@ -163,7 +161,7 @@ exports.connect = function (DB) {
       if ( buffer.indexOf("\n") != -1 ) {
         // split entries
         var rows = buffer.split("\n");
-        console.log(rows);
+
         // was there a partial entry read at the end?
         if ( buffer[buffer.length-1] != "\n" ) {
           buffer = rows.pop();
