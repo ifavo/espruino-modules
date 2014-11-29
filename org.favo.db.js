@@ -40,6 +40,7 @@ DB2.add({});
 var BUFFER_READ = 1024;
 
 exports.connect = function (DB) {
+  var DB_LEN = -1;
 
   /**
    * delete all entries of a database file
@@ -49,6 +50,7 @@ exports.connect = function (DB) {
     var f = E.openFile(DB, 'w');
     f.write();
     f.close();
+    DB_LEN = 0;
     return this;
   }
 
@@ -61,6 +63,10 @@ exports.connect = function (DB) {
     var f = E.openFile(DB, 'a');
     f.write(JSON.stringify(row) + "\n");
     f.close();
+    
+    if ( DB_LEN >= 0 ) {
+      DB_LEN++;
+    }
     return this;
   }
 
@@ -114,6 +120,9 @@ exports.connect = function (DB) {
           for ( var i in rows ) {
             if ( i != ignore ) {
               saveRows.push(rows[i]);
+              if ( DB_LEN >= 0 ) {
+                DB_LEN--;
+              }
             }
           }
           f2.write(saveRows.join("\n"));
@@ -146,9 +155,15 @@ exports.connect = function (DB) {
 
   /**
    * get the number of entries in the database
+   * @param {Bool} forceUpdate optional: ignore cache and enforce reading from source file
    * @return {Number}
    */
-  function len() {
+  function len(forceUpdate) {
+    // use cached DB_LEN if available
+    if ( !forceUpdate && DB_LEN >= 0 ) {
+      return DB_LEN;
+    }
+  
     var f = E.openFile(DB, 'r');
     var cnt = -1;
     var buffer = '';
@@ -176,7 +191,8 @@ exports.connect = function (DB) {
     }
     f.close();
 
-    return cnt;
+    DB_LEN = cnt;
+    return DB_LEN;
   }
 
   /**
