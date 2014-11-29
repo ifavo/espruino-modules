@@ -37,7 +37,7 @@ DB2.add({});
 
 */
 
-var BUFFER_READ = 1024;
+var BUFFER_READ = 32;
 
 exports.connect = function (DB) {
   var DB_LEN = -1;
@@ -48,7 +48,7 @@ exports.connect = function (DB) {
    */
   function truncate () {
     var f = E.openFile(DB, 'w');
-    f.write();
+    f.write('');
     f.close();
     DB_LEN = 0;
     return this;
@@ -78,14 +78,14 @@ exports.connect = function (DB) {
   function rem(idx) {
     var f = E.openFile(DB, 'r');
     var f2 = E.openFile(DB + '.tmp', 'w');
-    var row;
     var curIdx = 0;
     var buffer = '';
     var data = '';
     var removed = false;
+    var saveRows, ignore, newCurIdx, rows, i;
 
     // read the file in n-byte-steps
-    while ( (data = f.read(BUFFER_READ)) ) {
+    while ( !!(data = f.read(BUFFER_READ)) ) {
 
       // if the targed entry was already removed, stream the rest of the data into the tmp file
       if ( removed ) {
@@ -98,7 +98,7 @@ exports.connect = function (DB) {
       // is there a line break, indicating different entries?
       if ( buffer.indexOf("\n") != -1 ) {
         // split entries
-        var rows = buffer.split("\n");
+        rows = buffer.split("\n");
 
         // was there a partial entry read at the end?
         if ( buffer[buffer.length-1] != "\n" ) {
@@ -111,13 +111,13 @@ exports.connect = function (DB) {
         }
 
         // calculate index where we are at
-        var newCurIdx = curIdx + rows.length;
+        newCurIdx = curIdx + rows.length;
 
         // are we at the requested index?
         if ( idx >= curIdx && idx <= newCurIdx ) {
-          var ignore = idx - curIdx - 1;
-          var saveRows = [];
-          for ( var i in rows ) {
+          ignore = idx - curIdx - 1;
+          saveRows = [];
+          for ( i in rows ) {
             if ( i != ignore ) {
               saveRows.push(rows[i]);
               if ( DB_LEN >= 0 ) {
@@ -126,29 +126,32 @@ exports.connect = function (DB) {
             }
           }
           f2.write(saveRows.join("\n"));
+          saveRows = null;
           removed = true;
         }
         else {
           f2.write(rows.join("\n"));
         }
         curIdx += rows.length;
+        rows = null;
       }
     }
     f.close();
     f2.close();
 
     // copy f2 back to f
-    f = E.openFile(DB, 'w');
-    f2 = E.openFile(DB + '.tmp', 'r');
-    f2.pipe(f, {chunkSize: BUFFER_READ, complete: function () {
-      f.close();
-      f2.close();
+    var f3 = E.openFile(DB, 'w');
+    var f4 = E.openFile(DB + '.tmp', 'r');
+    while ( (data = f4.read(BUFFER_READ)) ) {
+      f3.write(data);
+    }
+    f3.close();
+    f4.close();
 
-      // remove tmp file
-      f2 = E.openFile(DB + '.tmp', 'w');
-      f2.write();
-      f2.close();
-    }});
+    // remove tmp file
+    var f6 = E.openFile(DB + '.tmp', 'w');
+    f6.write('');
+    f6.close();
 
     return this;
   }
@@ -168,13 +171,14 @@ exports.connect = function (DB) {
     var cnt = -1;
     var buffer = '';
     var data = '';
+    var rows;
 
-    while ( (data = f.read(BUFFER_READ)) ) {
+    while ( !!(data = f.read(BUFFER_READ)) ) {
       buffer += data;
       // is there a line break, indicating different entries?
       if ( buffer.indexOf("\n") != -1 ) {
         // split entries
-        var rows = buffer.split("\n");
+        rows = buffer.split("\n");
 
         // was there a partial entry read at the end?
         if ( buffer[buffer.length-1] != "\n" ) {
@@ -202,21 +206,21 @@ exports.connect = function (DB) {
    */
   function get(idx) {
     var f = E.openFile(DB, 'r');
-    var row;
     var curIdx = 0;
     var match = null;
     var buffer = '';
     var data = '';
+    var rows;
 
     // read the file in n-byte-steps
-    while ( (data = f.read(BUFFER_READ)) ) {
+    while ( !!(data = f.read(BUFFER_READ)) ) {
 
       buffer += data;
 
       // is there a line break, indicating different entries?
       if ( buffer.indexOf("\n") != -1 ) {
         // split entries
-        var rows = buffer.split("\n");
+        rows = buffer.split("\n");
 
         // was there a partial entry read at the end?
         if ( buffer[buffer.length-1] != "\n" ) {
