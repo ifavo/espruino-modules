@@ -13,3 +13,7 @@ easy module to use shift registers
 **org.favo.db**
 
 basic database functionality for espruino
+
+**org.favo.template**
+
+very basic templating
