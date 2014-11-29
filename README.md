@@ -9,3 +9,7 @@ deep merge of objects
 **org.favo.shiftregister**
 
 easy module to use shift registers
+
+**org.favo.db**
+
+basic database functionality for espruino
