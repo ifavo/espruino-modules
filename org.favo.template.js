@@ -16,9 +16,16 @@ TPL("Hello {location.planet}", {name: "You", location: {planet: "World"}}); // r
 
 function render (s, d, p) {
   p=(p)?p+'.':'';
-  for (var k in d)
-    if(typeof d[k]=='object')s=render(s,d[k],p+k);
-    else while(s.indexOf('{'+p+k+'}')>=0)s=s.replace('{'+p+k+'}',d[k]);
+  for (var k in d) {
+    if(typeof(d[k])=='object') {
+      s=render(s,d[k],p+k);
+    }
+    else {
+      while(s.indexOf('{'+p+k+'}')>=0) {
+        s=s.replace('{'+p+k+'}',d[k]);
+      }
+    }
+  }
   return s;
 }
 exports.render = render;
