@@ -254,7 +254,8 @@ exports.connect = function (DB) {
     add: add,
     rem: rem,
     len: len,
-    get: get
+    get: get,
+    truncate: truncate
   };
 
 }
